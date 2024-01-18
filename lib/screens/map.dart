@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:share/share.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../src/locations.dart' as locations;
 
 class LocationShareScreen extends StatefulWidget {
   const LocationShareScreen({super.key});
@@ -11,8 +12,26 @@ class LocationShareScreen extends StatefulWidget {
 
 class _LocationShareScreenState extends State<LocationShareScreen> {
   String _locationString = 'Fetching location...';
-  GoogleMapController? _mapController;
+  final Map<String, Marker> _markers = {};
   LatLng _currentLatLng = const LatLng(0, 0);
+
+  Future<void> _onMapCreated(GoogleMapController controller) async {
+    final googleOffices = await locations.getGoogleOffices();
+    setState(() {
+      _markers.clear();
+      for (final office in googleOffices.offices) {
+        final marker = Marker(
+          markerId: MarkerId(office.name),
+          position: LatLng(office.lat, office.lng),
+          infoWindow: InfoWindow(
+            title: office.name,
+            snippet: office.address,
+          ),
+        );
+        _markers[office.name] = marker;
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -27,6 +46,14 @@ class _LocationShareScreenState extends State<LocationShareScreen> {
         _locationString =
             'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
         _currentLatLng = LatLng(position.latitude, position.longitude);
+        _markers['Current Location'] = Marker(
+          markerId: const MarkerId('Current Location'),
+          position: _currentLatLng,
+          infoWindow: const InfoWindow(
+            title: 'Current Location',
+            snippet: 'You are here',
+          ),
+        );
       });
     } catch (e) {
       setState(() {
@@ -61,10 +88,6 @@ class _LocationShareScreenState extends State<LocationShareScreen> {
   }
 
   void _shareLocation() {
-    //   _share(){
-    //   Share.share('https://www.google.com/maps/search/?api=1&query=${_currentLocation.latitude},${_currentLocation.longitude}');
-    // }
-    // Share.share(_locationString);
     Share.share(
         'https://www.google.com/maps/search/?api=1&query=${_currentLatLng.latitude},${_currentLatLng.longitude}');
   }
@@ -78,27 +101,23 @@ class _LocationShareScreenState extends State<LocationShareScreen> {
       body: Column(
         children: [
           Container(
-            height: 300,
-            child: GoogleMap(
-              onMapCreated: (GoogleMapController controller) {
-                _mapController = controller;
-              },
-              initialCameraPosition: CameraPosition(
-                target: _currentLatLng,
-                zoom: 15,
-              ),
-              markers: {
-                Marker(
-                  markerId: const MarkerId('currentLocation'),
-                  position: _currentLatLng,
-                  infoWindow: InfoWindow(
-                    title: 'Current Location',
-                    snippet: _locationString,
-                  ),
+              height: 300,
+              child: GoogleMap(
+                onMapCreated: _onMapCreated,
+                initialCameraPosition: CameraPosition(
+                  target: _currentLatLng,
+                  zoom: 2,
                 ),
-              },
-            ),
-          ),
+                markers: _markers.values.toSet(),
+                // set latlng on longpress
+                onLongPress: (latLng) {
+                  setState(() {
+                    _currentLatLng = latLng;
+                    _locationString =
+                        'Latitude: ${latLng.latitude}, Longitude: ${latLng.longitude}';
+                  });
+                },
+              )),
           const SizedBox(height: 20),
           Text(
             _locationString,
