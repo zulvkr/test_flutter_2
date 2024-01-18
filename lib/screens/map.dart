@@ -4,8 +4,7 @@ import 'package:share/share.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class LocationShareScreen extends StatefulWidget {
-  const LocationShareScreen({Key? key}) : super(key: key);
-
+  const LocationShareScreen({super.key});
   @override
   State<LocationShareScreen> createState() => _LocationShareScreenState();
 }
@@ -23,8 +22,7 @@ class _LocationShareScreenState extends State<LocationShareScreen> {
 
   Future<void> _getLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+      Position position = await _determinePosition();
       setState(() {
         _locationString =
             'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
@@ -37,8 +35,38 @@ class _LocationShareScreenState extends State<LocationShareScreen> {
     }
   }
 
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
   void _shareLocation() {
-    Share.share(_locationString);
+    //   _share(){
+    //   Share.share('https://www.google.com/maps/search/?api=1&query=${_currentLocation.latitude},${_currentLocation.longitude}');
+    // }
+    // Share.share(_locationString);
+    Share.share(
+        'https://www.google.com/maps/search/?api=1&query=${_currentLatLng.latitude},${_currentLatLng.longitude}');
   }
 
   @override
@@ -49,7 +77,7 @@ class _LocationShareScreenState extends State<LocationShareScreen> {
       ),
       body: Column(
         children: [
-          SizedBox(
+          Container(
             height: 300,
             child: GoogleMap(
               onMapCreated: (GoogleMapController controller) {
