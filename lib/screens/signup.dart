@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:test_flutter_2/screens/map.dart';
 
-class DummyLoginScreen extends StatefulWidget {
-  const DummyLoginScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -13,10 +14,10 @@ class DummyLoginScreen extends StatefulWidget {
   // always marked "final".
 
   @override
-  State<DummyLoginScreen> createState() => _DummyLoginScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _DummyLoginScreenState extends State<DummyLoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -145,6 +146,11 @@ class _MyFormState extends State<MyForm> {
               foregroundColor: const Color(0xffffffff),
             ),
             onPressed: () => {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const LocationShareScreen(),
+                ),
+              )
               // Handle button press
             },
             child: const Text('Sign Up'),
