@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:test_flutter_2/screens/dummy_login.dart';
 
 class GetStartedScreen extends StatelessWidget {
   const GetStartedScreen({super.key});
@@ -46,6 +47,12 @@ class GetStartedScreen extends StatelessWidget {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
+                      // navigate to DummyLoginScreen
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const DummyLoginScreen(),
+                        ),
+                      );
                       // Handle button press
                     },
                     child: const Text(
